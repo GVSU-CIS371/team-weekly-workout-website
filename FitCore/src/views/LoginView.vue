@@ -79,6 +79,8 @@
 </template>
 
 <script setup>
+import { db, COL } from '@/firebase.js'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, reactive } from 'vue'
 import { useRouter }     from 'vue-router'
 import { useAuthStore }  from '@/stores/auth.js'
@@ -122,11 +124,31 @@ async function doRegister() {
     return showAlert('All fields are required.')
   if (regForm.password !== regForm.confirm)
     return showAlert('Passwords do not match.')
+
   busy.value = true
+
   try {
-    await authStore.register(regForm.email, regForm.password, regForm.displayName)
+    // 1. Create user in Firebase Auth
+    const user = await authStore.register(
+      regForm.email,
+      regForm.password,
+      regForm.displayName
+    )
+
+    // 2. Save user in Firestore
+    await setDoc(doc(db, COL.users, authStore.uid), {
+      displayName: regForm.displayName,
+      email: regForm.email,
+      createdAt: serverTimestamp()
+    })
+
+    showAlert('Account created!', 'alert-success')
+
+    // 3. Redirect
     router.push({ name: 'Dashboard' })
-  } catch {
+
+  } catch (err) {
+    console.error(err)
     showAlert(authStore.authError || 'Registration failed.')
   } finally {
     busy.value = false
