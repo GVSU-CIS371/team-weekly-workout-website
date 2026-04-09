@@ -105,14 +105,25 @@ function showAlert(msg, type = 'alert-error', ms = 4000) {
 
 // ── SIGN IN ────────────────────────────────────────────────
 async function doLogin() {
-  if (!loginForm.email || !loginForm.password)
+  if (!loginForm.email || !loginForm.password) {
     return showAlert('Please enter your email and password.')
+  }
+
   busy.value = true
+
   try {
-    await authStore.login(loginForm.email, loginForm.password)
+    const user = await authStore.login(
+      loginForm.email,
+      loginForm.password
+    )
+
+    if (!user) throw new Error('No user returned')
+
     router.push({ name: 'Dashboard' })
-  } catch {
-    showAlert(authStore.authError || 'Sign-in failed.')
+
+  } catch (err) {
+    console.error(err)
+    showAlert(authStore.authError || err.message || 'Sign-in failed.')
   } finally {
     busy.value = false
   }
@@ -120,10 +131,13 @@ async function doLogin() {
 
 // ── REGISTER ───────────────────────────────────────────────
 async function doRegister() {
-  if (!regForm.displayName || !regForm.email || !regForm.password)
+  if (!regForm.displayName || !regForm.email || !regForm.password) {
     return showAlert('All fields are required.')
-  if (regForm.password !== regForm.confirm)
+  }
+
+  if (regForm.password !== regForm.confirm) {
     return showAlert('Passwords do not match.')
+  }
 
   busy.value = true
 
@@ -135,8 +149,12 @@ async function doRegister() {
       regForm.displayName
     )
 
-    // 2. Save user in Firestore
-    await setDoc(doc(db, COL.users, authStore.uid), {
+    if (!user || !user.uid) {
+      throw new Error('User creation failed')
+    }
+
+    // 2. Save user in Firestore (FIXED: use user.uid)
+    await setDoc(doc(db, COL.users, user.uid), {
       displayName: regForm.displayName,
       email: regForm.email,
       createdAt: serverTimestamp()
@@ -149,7 +167,7 @@ async function doRegister() {
 
   } catch (err) {
     console.error(err)
-    showAlert(authStore.authError || 'Registration failed.')
+    showAlert(authStore.authError || err.message || 'Registration failed.')
   } finally {
     busy.value = false
   }
