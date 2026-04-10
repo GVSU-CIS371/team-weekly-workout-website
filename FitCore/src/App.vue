@@ -1,6 +1,6 @@
 <template>
   <!-- Loading screen while Firebase restores the auth session -->
-  <div v-if="authStore.loading.value" class="splash">
+  <div v-if="authStore.loading" class="splash">
     <span class="splash-logo">FitCore</span>
   </div>
 
@@ -36,15 +36,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
-import { useRouter }           from 'vue-router'
-import { useAuthStore }        from '@/stores/auth.js'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
 
 const router    = useRouter()
 const authStore = useAuthStore()
-
-// Bootstrap auth listener — restores session on page refresh
-onMounted(() => authStore.init())
 
 // Build initials from display name for the avatar chip
 const initials = computed(() => {
