@@ -33,6 +33,7 @@
       </Transition>
     </RouterView>
   </div>
+    <router-view :key="$route.fullPath" />
 </template>
 
 <script setup>
