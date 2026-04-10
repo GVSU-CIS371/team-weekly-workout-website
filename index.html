@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitCore — Your Health Hub</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161a22;
+      --surface2:  #1e2330;
+      --border:    #2a3040;
+      --accent:    #e8ff47;
+      --accent2:   #47c8ff;
+      --danger:    #ff5c5c;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --radius:    10px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+
+    /* ── NAV ─────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,15,20,.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 2rem; height: 64px; gap: 2rem;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.7rem; letter-spacing: .05em;
+      color: var(--accent); flex-shrink: 0;
+      user-select: none;
+    }
+    .nav-links { display: flex; gap: .25rem; flex: 1; }
+    .nav-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 500;
+      color: var(--muted); padding: .45rem 1rem; border-radius: 6px;
+      letter-spacing: .04em; text-transform: uppercase;
+      transition: color .2s, background .2s;
+      position: relative;
+    }
+    .nav-btn:hover { color: var(--text); background: var(--surface2); }
+    .nav-btn.active {
+      color: var(--bg); background: var(--accent);
+      font-weight: 600;
+    }
+    .nav-user {
+      font-family: 'DM Mono', monospace; font-size: .78rem;
+      color: var(--muted); flex-shrink: 0;
+    }
+    .nav-user span { color: var(--accent2); }
+
+    /* ── PAGE WRAPPER ────────────────────────── */
+    .page { max-width: 960px; margin: 0 auto; padding: 3rem 2rem; animation: fadeUp .35s ease; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem; letter-spacing: .06em;
+      color: var(--accent); line-height: 1;
+      margin-bottom: .35rem;
+    }
+    .page-sub { color: var(--muted); font-size: .9rem; margin-bottom: 2.5rem; }
+
+    /* ── CARDS ───────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-title { font-size: .7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--muted); margin-bottom: 1.2rem; }
+
+    /* ── FORM ELEMENTS ───────────────────────── */
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; font-size: .8rem; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem; }
+    input, select {
+      width: 100%; padding: .7rem 1rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: .95rem;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+    /* ── BUTTONS ─────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .65rem 1.5rem; border-radius: 7px; border: none;
+      font-family: 'DM Sans', sans-serif; font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-primary:hover { opacity: .88; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: .85; }
+    .btn-sm { padding: .35rem .9rem; font-size: .8rem; }
+
+    /* ── TABLE ───────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; font-size: .7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); padding: .6rem .8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: .75rem .8rem; font-size: .9rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* ── STAT PILLS ──────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat-pill {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem 1.2rem;
+      text-align: center;
+    }
+    .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; color: var(--accent); }
+    .stat-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: .2rem; }
+
+    /* ── TAGS ────────────────────────────────── */
+    .tag {
+      display: inline-block; padding: .2rem .6rem; border-radius: 4px;
+      font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .tag-green  { background: rgba(74,222,128,.15); color: #4ade80; }
+    .tag-blue   { background: rgba(71,200,255,.15); color: var(--accent2); }
+    .tag-yellow { background: rgba(232,255,71,.12); color: var(--accent); }
+    .tag-red    { background: rgba(255,92,92,.15);  color: var(--danger); }
+
+    /* ── LOGIN PAGE ──────────────────────────── */
+    .login-wrap {
+      min-height: calc(100vh - 64px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .login-box {
+      width: 100%; max-width: 420px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 2.5rem;
+    }
+    .login-logo { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem;
+      color: var(--accent); letter-spacing: .08em; margin-bottom: .4rem; }
+    .login-tagline { color: var(--muted); font-size: .88rem; margin-bottom: 2rem; }
+
+    /* ── ALERT ───────────────────────────────── */
+    .alert {
+      padding: .8rem 1rem; border-radius: 7px; margin-bottom: 1.2rem;
+      font-size: .88rem;
+    }
+    .alert-success { background: rgba(74,222,128,.12); border: 1px solid rgba(74,222,128,.25); color: #4ade80; }
+    .alert-error   { background: rgba(255,92,92,.12);  border: 1px solid rgba(255,92,92,.25);  color: var(--danger); }
+
+    /* ── WORKOUT SPECIFIC ────────────────────── */
+    .exercise-row { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: .75rem; align-items: center; }
+
+    /* ── DIVIDER ─────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* ── EMPTY STATE ─────────────────────────── */
+    .empty { text-align: center; padding: 3rem; color: var(--muted); font-size: .9rem; }
+    .empty-icon { font-size: 2.5rem; margin-bottom: .75rem; opacity: .4; }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .row-2, .row-3, .stats-grid { grid-template-columns: 1fr; }
+      .page-title { font-size: 2.2rem; }
+      nav { padding: 0 1rem; gap: 1rem; }
+      .nav-btn { padding: .4rem .6rem; font-size: .75rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── NAVIGATION ── -->
+  <nav>
+    <div class="nav-logo">FitCore</div>
+    <div class="nav-links">
+      <button class="nav-btn" :class="{active: page==='login'}"   @click="page='login'">Login</button>
+      <button class="nav-btn" :class="{active: page==='stats'}"   @click="page='stats'">Body Stats</button>
+      <button class="nav-btn" :class="{active: page==='meals'}"   @click="page='meals'">Meals</button>
+      <button class="nav-btn" :class="{active: page==='workouts'}" @click="page='workouts'">Workouts</button>
+    </div>
+    <div class="nav-user" v-if="loggedInUser">
+      Logged in as <span>{{ loggedInUser }}</span>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════
+       PAGE: LOGIN
+  ════════════════════════════════════════════════════ -->
+  <div v-if="page==='login'" class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo">FitCore</div>
+      <div class="login-tagline">Track your body. Own your progress.</div>
+
+      <div v-if="loginAlert.msg" class="alert" :class="loginAlert.type==='success'?'alert-success':'alert-error'">
+        {{ loginAlert.msg }}
+      </div>
+
+      <div v-if="!showRegister">
+        <div class="card-title">Sign In</div>
+        <div class="form-group">
+          <label>Username</label>
+          <input v-model="loginForm.username" placeholder="your_username" @keyup.enter="doLogin" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input v-model="loginForm.password" type="password" placeholder="••••••••" @keyup.enter="doLogin" />
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" @click="doLogin">
+          Sign In →
+        </button>
+        <hr class="divider">
+        <p style="text-align:center;font-size:.85rem;color:var(--muted)">
+          No account?
+          <button class="btn btn-outline btn-sm" style="margin-left:.5rem" @click="showRegister=true">Create one</button>
+        </p>
+      </div>
+
+      <div v-else>
+        <div class="card-title">Create Account</div>
+        <div class="form-group">
+          <label>Username</label>
+          <input v-model="regForm.username" placeholder="choose_a_username" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input v-model="regForm.email" type="email" placeholder="you@email.com" />
+        </div>
+        <div class="row-2">
+          <div class="form-group">
+            <label>Password</label>
+            <input v-model="regForm.password" type="password" placeholder="••••••••" />
+          </div>
+          <div class="form-group">
+            <label>Confirm</label>
+            <input v-model="regForm.confirm" type="password" placeholder="••••••••" />
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" @click="doRegister">
+          Create Account
+        </button>
+        <hr class="divider">
+        <p style="text-align:center;font-size:.85rem;color:var(--muted)">
+          Have an account?
+          <button class="btn btn-outline btn-sm" style="margin-left:.5rem" @click="showRegister=false">Sign in</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       PAGE: BODY STATS
+  ════════════════════════════════════════════════════ -->
+  <div v-if="page==='stats'" class="page">
+    <div class="page-title">Body Stats</div>
+    <div class="page-sub">Track your measurements and body composition over time.</div>
+
+    <!-- summary pills -->
+    <div class="stats-grid" v-if="statEntries.length">
+      <div class="stat-pill">
+        <div class="stat-val">{{ latestStat.weight }} <small style="font-size:1rem">{{ weightUnit }}</small></div>
+        <div class="stat-label">Weight</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">{{ calcBMI }}</div>
+        <div class="stat-label">BMI</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">{{ latestStat.bodyFat }}<small style="font-size:1rem">%</small></div>
+        <div class="stat-label">Body Fat</div>
+      </div>
+    </div>
+
+    <!-- log form -->
+    <div class="card">
+      <div class="card-title">Log New Entry</div>
+      <div class="row-3">
+        <div class="form-group">
+          <label>Date</label>
+          <input v-model="statForm.date" type="date" />
+        </div>
+        <div class="form-group">
+          <label>Weight ({{ weightUnit }})</label>
+          <input v-model="statForm.weight" type="number" placeholder="0.0" step="0.1" />
+        </div>
+        <div class="form-group">
+          <label>Height (cm)</label>
+          <input v-model="statForm.height" type="number" placeholder="175" />
+        </div>
+      </div>
+      <div class="row-3">
+        <div class="form-group">
+          <label>Body Fat %</label>
+          <input v-model="statForm.bodyFat" type="number" placeholder="0.0" step="0.1" />
+        </div>
+        <div class="form-group">
+          <label>Muscle Mass (kg)</label>
+          <input v-model="statForm.muscle" type="number" placeholder="0.0" step="0.1" />
+        </div>
+        <div class="form-group">
+          <label>Waist (cm)</label>
+          <input v-model="statForm.waist" type="number" placeholder="0" />
+        </div>
+      </div>
+      <button class="btn btn-primary" @click="addStatEntry">+ Add Entry</button>
+    </div>
+
+    <!-- history table -->
+    <div class="card">
+      <div class="card-title">History</div>
+      <div v-if="!statEntries.length" class="empty">
+        <div class="empty-icon">📊</div>
+        No entries yet — log your first stat above.
+      </div>
+      <table v-else>
+        <thead>
+          <tr>
+            <th>Date</th><th>Weight</th><th>Height</th><th>BMI</th><th>Body Fat</th><th>Waist</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(e,i) in [...statEntries].reverse()" :key="i">
+            <td style="font-family:'DM Mono',monospace;font-size:.82rem">{{ e.date }}</td>
+            <td>{{ e.weight }} {{ weightUnit }}</td>
+            <td>{{ e.height }} cm</td>
+            <td><span class="tag tag-blue">{{ bmi(e) }}</span></td>
+            <td>{{ e.bodyFat }}%</td>
+            <td>{{ e.waist }} cm</td>
+            <td><button class="btn btn-danger btn-sm" @click="removeStatEntry(statEntries.length-1-i)">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       PAGE: MEALS
+  ════════════════════════════════════════════════════ -->
+  <div v-if="page==='meals'" class="page">
+    <div class="page-title">Meal Records</div>
+    <div class="page-sub">Log your meals and track your daily nutrition.</div>
+
+    <!-- daily totals -->
+    <div class="stats-grid" v-if="todayMeals.length">
+      <div class="stat-pill">
+        <div class="stat-val">{{ todayTotals.calories }}</div>
+        <div class="stat-label">Calories Today</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">{{ todayTotals.protein }}<small style="font-size:1rem">g</small></div>
+        <div class="stat-label">Protein</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">{{ todayTotals.carbs }}<small style="font-size:1rem">g</small></div>
+        <div class="stat-label">Carbs</div>
+      </div>
+    </div>
+
+    <!-- add meal -->
+    <div class="card">
+      <div class="card-title">Log a Meal</div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Meal Name</label>
+          <input v-model="mealForm.name" placeholder="e.g. Chicken & Rice" />
+        </div>
+        <div class="form-group">
+          <label>Meal Type</label>
+          <select v-model="mealForm.type">
+            <option>Breakfast</option><option>Lunch</option>
+            <option>Dinner</option><option>Snack</option>
+          </select>
+        </div>
+      </div>
+      <div class="row-3">
+        <div class="form-group">
+          <label>Calories</label>
+          <input v-model="mealForm.calories" type="number" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label>Protein (g)</label>
+          <input v-model="mealForm.protein" type="number" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label>Carbs (g)</label>
+          <input v-model="mealForm.carbs" type="number" placeholder="0" />
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Fat (g)</label>
+          <input v-model="mealForm.fat" type="number" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input v-model="mealForm.date" type="date" />
+        </div>
+      </div>
+      <button class="btn btn-primary" @click="addMeal">+ Log Meal</button>
+    </div>
+
+    <!-- meal list -->
+    <div class="card">
+      <div class="card-title">Meal Log</div>
+      <div v-if="!meals.length" class="empty">
+        <div class="empty-icon">🥗</div>
+        No meals logged yet — add your first meal above.
+      </div>
+      <table v-else>
+        <thead>
+          <tr><th>Date</th><th>Meal</th><th>Type</th><th>Cal</th><th>Protein</th><th>Carbs</th><th>Fat</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="(m,i) in [...meals].reverse()" :key="i">
+            <td style="font-family:'DM Mono',monospace;font-size:.82rem">{{ m.date }}</td>
+            <td style="font-weight:500">{{ m.name }}</td>
+            <td>
+              <span class="tag" :class="{
+                'tag-yellow': m.type==='Breakfast',
+                'tag-blue':   m.type==='Lunch',
+                'tag-green':  m.type==='Dinner',
+                'tag-red':    m.type==='Snack'
+              }">{{ m.type }}</span>
+            </td>
+            <td>{{ m.calories }}</td>
+            <td>{{ m.protein }}g</td>
+            <td>{{ m.carbs }}g</td>
+            <td>{{ m.fat }}g</td>
+            <td><button class="btn btn-danger btn-sm" @click="removeMeal(meals.length-1-i)">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       PAGE: WORKOUTS
+  ════════════════════════════════════════════════════ -->
+  <div v-if="page==='workouts'" class="page">
+    <div class="page-title">Workouts</div>
+    <div class="page-sub">Build sessions and log your exercises.</div>
+
+    <!-- totals -->
+    <div class="stats-grid" v-if="workouts.length">
+      <div class="stat-pill">
+        <div class="stat-val">{{ workouts.length }}</div>
+        <div class="stat-label">Sessions Logged</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">{{ totalExercises }}</div>
+        <div class="stat-label">Total Exercises</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val">{{ totalVolume }}<small style="font-size:1rem">kg</small></div>
+        <div class="stat-label">Total Volume</div>
+      </div>
+    </div>
+
+    <!-- new workout -->
+    <div class="card">
+      <div class="card-title">Log New Session</div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Session Name</label>
+          <input v-model="workoutForm.name" placeholder="e.g. Push Day A" />
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input v-model="workoutForm.date" type="date" />
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Category</label>
+          <select v-model="workoutForm.category">
+            <option>Strength</option><option>Cardio</option>
+            <option>HIIT</option><option>Flexibility</option><option>Sport</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Duration (min)</label>
+          <input v-model="workoutForm.duration" type="number" placeholder="60" />
+        </div>
+      </div>
+
+      <!-- exercises builder -->
+      <div class="card-title" style="margin-top:.5rem">Exercises</div>
+      <div v-for="(ex, idx) in workoutForm.exercises" :key="idx" class="exercise-row" style="margin-bottom:.75rem">
+        <input v-model="ex.name"   placeholder="Exercise name" />
+        <input v-model="ex.sets"   type="number" placeholder="Sets"  style="width:80px" />
+        <input v-model="ex.reps"   type="number" placeholder="Reps"  style="width:80px" />
+        <input v-model="ex.weight" type="number" placeholder="kg"    style="width:80px" />
+        <button class="btn btn-danger btn-sm" @click="workoutForm.exercises.splice(idx,1)">✕</button>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem">
+        <button class="btn btn-outline btn-sm" @click="workoutForm.exercises.push({name:'',sets:'',reps:'',weight:''})">
+          + Add Exercise
+        </button>
+        <button class="btn btn-primary" @click="addWorkout">Save Session</button>
+      </div>
+    </div>
+
+    <!-- workout history -->
+    <div class="card" v-for="(w, wi) in [...workouts].reverse()" :key="wi">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:600;font-size:1.05rem;margin-bottom:.3rem">{{ w.name }}</div>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <span style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted)">{{ w.date }}</span>
+            <span class="tag tag-blue">{{ w.category }}</span>
+            <span class="tag tag-yellow">{{ w.duration }} min</span>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" @click="removeWorkout(workouts.length-1-wi)">✕</button>
+      </div>
+      <hr class="divider" style="margin:.9rem 0" />
+      <table v-if="w.exercises.length">
+        <thead><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Weight</th><th>Volume</th></tr></thead>
+        <tbody>
+          <tr v-for="(e,ei) in w.exercises" :key="ei">
+            <td style="font-weight:500">{{ e.name }}</td>
+            <td>{{ e.sets }}</td>
+            <td>{{ e.reps }}</td>
+            <td>{{ e.weight }} kg</td>
+            <td><span class="tag tag-green">{{ (e.sets * e.reps * e.weight) || 0 }} kg</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else style="color:var(--muted);font-size:.85rem">No exercises recorded.</div>
+    </div>
+
+    <div v-if="!workouts.length" class="empty" style="margin-top:2rem">
+      <div class="empty-icon">🏋️</div>
+      No workouts yet — log your first session above.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { createApp, ref, computed, reactive } = Vue;
+
+createApp({
+  setup() {
+    const page = ref('login');
+    const loggedInUser = ref('');
+
+    // ── LOGIN ──────────────────────────────────────────
+    const showRegister = ref(false);
+    const loginAlert   = reactive({ msg:'', type:'' });
+    const users        = ref([{ username:'demo', password:'demo123', email:'demo@fitcore.app' }]);
+    const loginForm    = reactive({ username:'', password:'' });
+    const regForm      = reactive({ username:'', email:'', password:'', confirm:'' });
+
+    function setAlert(msg, type='error', ms=3000) {
+      loginAlert.msg = msg; loginAlert.type = type;
+      setTimeout(() => { loginAlert.msg = ''; }, ms);
+    }
+    function doLogin() {
+      const u = users.value.find(u => u.username === loginForm.username && u.password === loginForm.password);
+      if (!u) return setAlert('Invalid username or password.');
+      loggedInUser.value = u.username;
+      setAlert('Welcome back, ' + u.username + '!', 'success');
+      setTimeout(() => { page.value = 'stats'; }, 800);
+    }
+    function doRegister() {
+      if (!regForm.username || !regForm.email || !regForm.password) return setAlert('All fields required.');
+      if (regForm.password !== regForm.confirm) return setAlert('Passwords do not match.');
+      if (users.value.find(u => u.username === regForm.username)) return setAlert('Username taken.');
+      users.value.push({ username: regForm.username, email: regForm.email, password: regForm.password });
+      setAlert('Account created! You can now sign in.', 'success');
+      setTimeout(() => { showRegister.value = false; }, 1200);
+    }
+
+    // ── BODY STATS ─────────────────────────────────────
+    const weightUnit  = ref('kg');
+    const statEntries = ref([]);
+    const statForm    = reactive({ date: today(), weight:'', height:'', bodyFat:'', muscle:'', waist:'' });
+    const latestStat  = computed(() => statEntries.value[statEntries.value.length - 1] || {});
+    const calcBMI     = computed(() => {
+      if (!latestStat.value.height || !latestStat.value.weight) return '—';
+      return bmi(latestStat.value);
+    });
+
+    function bmi(e) {
+      if (!e.height || !e.weight) return '—';
+      return (e.weight / ((e.height/100)**2)).toFixed(1);
+    }
+    function addStatEntry() {
+      if (!statForm.weight || !statForm.date) return;
+      statEntries.value.push({ ...statForm });
+      Object.assign(statForm, { date: today(), weight:'', height:'', bodyFat:'', muscle:'', waist:'' });
+    }
+    function removeStatEntry(i) { statEntries.value.splice(i, 1); }
+
+    // ── MEALS ──────────────────────────────────────────
+    const meals    = ref([]);
+    const mealForm = reactive({ name:'', type:'Breakfast', calories:'', protein:'', carbs:'', fat:'', date: today() });
+    const todayMeals   = computed(() => meals.value.filter(m => m.date === today()));
+    const todayTotals  = computed(() => todayMeals.value.reduce((a,m) => ({
+      calories: a.calories + (+m.calories||0),
+      protein:  a.protein  + (+m.protein||0),
+      carbs:    a.carbs    + (+m.carbs||0)
+    }), { calories:0, protein:0, carbs:0 }));
+
+    function addMeal() {
+      if (!mealForm.name) return;
+      meals.value.push({ ...mealForm });
+      Object.assign(mealForm, { name:'', type:'Breakfast', calories:'', protein:'', carbs:'', fat:'', date: today() });
+    }
+    function removeMeal(i) { meals.value.splice(i, 1); }
+
+    // ── WORKOUTS ───────────────────────────────────────
+    const workouts    = ref([]);
+    const workoutForm = reactive({
+      name:'', date: today(), category:'Strength', duration:'',
+      exercises: [{ name:'', sets:'', reps:'', weight:'' }]
+    });
+    const totalExercises = computed(() => workouts.value.reduce((a,w) => a + w.exercises.length, 0));
+    const totalVolume    = computed(() =>
+      workouts.value.reduce((a,w) =>
+        a + w.exercises.reduce((b,e) => b + ((+e.sets||0)*(+e.reps||0)*(+e.weight||0)), 0), 0)
+    );
+
+    function addWorkout() {
+      if (!workoutForm.name) return;
+      workouts.value.push({
+        name: workoutForm.name, date: workoutForm.date,
+        category: workoutForm.category, duration: workoutForm.duration,
+        exercises: workoutForm.exercises.filter(e => e.name).map(e => ({ ...e }))
+      });
+      Object.assign(workoutForm, { name:'', date: today(), category:'Strength', duration:'' });
+      workoutForm.exercises = [{ name:'', sets:'', reps:'', weight:'' }];
+    }
+    function removeWorkout(i) { workouts.value.splice(i, 1); }
+
+    // ── UTILS ──────────────────────────────────────────
+    function today() { return new Date().toISOString().split('T')[0]; }
+
+    return {
+      page, loggedInUser,
+      showRegister, loginAlert, loginForm, regForm, doLogin, doRegister,
+      weightUnit, statEntries, statForm, latestStat, calcBMI, bmi, addStatEntry, removeStatEntry,
+      meals, mealForm, todayMeals, todayTotals, addMeal, removeMeal,
+      workouts, workoutForm, totalExercises, totalVolume, addWorkout, removeWorkout
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
