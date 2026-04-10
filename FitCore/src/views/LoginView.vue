@@ -93,7 +93,7 @@ const busy         = ref(false)
 const alertMsg     = ref('')
 const alertType    = ref('alert-error')  // 'alert-error' | 'alert-success'
 
-// Two-way bound form models
+// Forms
 const loginForm = reactive({ email: '', password: '' })
 const regForm   = reactive({ displayName: '', email: '', password: '', confirm: '' })
 
@@ -105,6 +105,8 @@ function showAlert(msg, type = 'alert-error', ms = 4000) {
 
 // ── SIGN IN ────────────────────────────────────────────────
 async function doLogin() {
+  authStore.authError = null  // clear old errors
+
   if (!loginForm.email || !loginForm.password) {
     return showAlert('Please enter your email and password.')
   }
@@ -117,13 +119,23 @@ async function doLogin() {
       loginForm.password
     )
 
-    if (!user) throw new Error('No user returned')
+    if (!user) throw new Error('Login failed')
+
+    // SUCCESS
+    showAlert('Login successful!', 'alert-success', 2000)
 
     router.push({ name: 'Dashboard' })
 
   } catch (err) {
     console.error(err)
-    showAlert(authStore.authError || err.message || 'Sign-in failed.')
+
+    const msg =
+      err?.code ||
+      err?.message ||
+      authStore.authError ||
+      'Sign-in failed.'
+
+    showAlert(msg)
   } finally {
     busy.value = false
   }
@@ -131,6 +143,8 @@ async function doLogin() {
 
 // ── REGISTER ───────────────────────────────────────────────
 async function doRegister() {
+  authStore.authError = null  // clear old errors
+
   if (!regForm.displayName || !regForm.email || !regForm.password) {
     return showAlert('All fields are required.')
   }
@@ -142,32 +156,44 @@ async function doRegister() {
   busy.value = true
 
   try {
-    // 1. Create user in Firebase Auth
+    // 1. Create user
     const user = await authStore.register(
       regForm.email,
       regForm.password,
       regForm.displayName
     )
 
+    console.log('User created:', user)
+
     if (!user || !user.uid) {
       throw new Error('User creation failed')
     }
 
-    // 2. Save user in Firestore (FIXED: use user.uid)
+    // 2. Save to Firestore
     await setDoc(doc(db, COL.users, user.uid), {
       displayName: regForm.displayName,
       email: regForm.email,
       createdAt: serverTimestamp()
     })
 
-    showAlert('Account created!', 'alert-success')
+    console.log('Firestore write successful')
+
+    // ✅ SUCCESS
+    showAlert('Account created!', 'alert-success', 2000)
 
     // 3. Redirect
     router.push({ name: 'Dashboard' })
 
   } catch (err) {
     console.error(err)
-    showAlert(authStore.authError || err.message || 'Registration failed.')
+
+    const msg =
+      err?.code ||
+      err?.message ||
+      authStore.authError ||
+      'Registration failed.'
+
+    showAlert(msg)
   } finally {
     busy.value = false
   }
