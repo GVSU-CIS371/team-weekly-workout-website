@@ -50,6 +50,7 @@ export function getFirebaseErrorMessage(error) {
     "auth/requires-recent-login":        "This action requires a recent login. Please sign out and sign back in.",
     "auth/id-token-expired":             "Your session has expired. Please sign in again.",
     "auth/network-request-failed":       "A network error occurred. Check your internet connection and try again.",
+    
 
     // --- Auth: password reset ---
     "auth/expired-action-code":          "This password reset link has expired. Request a new one.",

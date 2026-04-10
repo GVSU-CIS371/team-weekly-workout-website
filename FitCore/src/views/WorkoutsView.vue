@@ -1,4 +1,7 @@
 <template>
+  <div>
+    <p></p>
+  </div>
   <div class="page">
     <PageHeader title="Workouts" subtitle="Build and log your training sessions." />
 

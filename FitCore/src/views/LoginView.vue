@@ -1,4 +1,7 @@
 <template>
+    <div>
+    <p></p>
+  </div>
   <!-- ========================================================
     LoginView.vue
     Handles both Sign In and Register.
