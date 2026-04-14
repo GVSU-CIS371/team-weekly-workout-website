@@ -86,5 +86,6 @@ export const COL = {
   users: "users",
   workouts: "workouts",
   meals: "meals",
-  posts: "posts"
+  posts: "posts",
+  stats: "stats"
 };

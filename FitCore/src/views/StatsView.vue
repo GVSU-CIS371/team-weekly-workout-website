@@ -100,6 +100,9 @@ const form = reactive({
   date: today(), weight: '', height: '', bodyFat: '', muscle: '', waist: ''
 })
 
+// ✅ Correct UID
+const uid = computed(() => authStore.user?.uid)
+
 const latestStat = computed(() => statEntries.value[statEntries.value.length - 1] || {})
 const calcBMI    = computed(() => bmi(latestStat.value))
 
@@ -109,10 +112,11 @@ function bmi(e) {
 }
 
 async function saveEntry() {
-  if (!form.weight || !form.date) return
+  if (!form.weight || !form.date || !uid.value) return
   busy.value = true
+
   const payload = {
-    userId:    authStore.uid,
+    userId:    uid.value,
     date:      form.date,
     weight:    Number(form.weight),
     height:    Number(form.height),
@@ -143,14 +147,22 @@ async function saveEntry() {
 
 async function loadEntries() {
   loading.value = true
+
   try {
+    const currentUid = uid.value
+
     const q = query(
       collection(db, COL.stats),
-      where('userId', '==', authStore.uid),
       orderBy('date', 'asc')
     )
+
     const snap = await getDocs(q)
-    statEntries.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+    // ✅ filter by user HERE
+    statEntries.value = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(e => e.userId === currentUid)
+
   } catch (err) {
     console.error('loadEntries:', err)
   } finally {
@@ -166,20 +178,43 @@ async function deleteEntry(id) {
 
 function startEdit(entry) {
   Object.assign(form, {
-    date: entry.date, weight: entry.weight, height: entry.height,
-    bodyFat: entry.bodyFat, muscle: entry.muscle, waist: entry.waist
+    date: entry.date,
+    weight: entry.weight,
+    height: entry.height,
+    bodyFat: entry.bodyFat,
+    muscle: entry.muscle,
+    waist: entry.waist
   })
   editingId.value = entry.id
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-function cancelEdit() { editingId.value = null; resetForm() }
+
+function cancelEdit() {
+  editingId.value = null
+  resetForm()
+}
 
 function resetForm() {
-  Object.assign(form, { date: today(), weight:'', height:'', bodyFat:'', muscle:'', waist:'' })
+  Object.assign(form, {
+    date: today(),
+    weight: '',
+    height: '',
+    bodyFat: '',
+    muscle: '',
+    waist: ''
+  })
 }
-function today() { return new Date().toISOString().split('T')[0] }
 
-onMounted(loadEntries)
+function today() {
+  return new Date().toISOString().split('T')[0]
+}
+
+onMounted(async () => {
+  while (!uid.value) {
+    await new Promise(r => setTimeout(r, 50))
+  }
+  await loadEntries()
+})
 </script>
 
 <style scoped>

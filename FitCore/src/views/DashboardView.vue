@@ -25,7 +25,6 @@
           </tr>
         </tbody>
       </table>
-      <RouterLink to="/workouts" class="more-link">View all workouts →</RouterLink>
     </AppCard>
 
     <AppCard title="Today's Meals">
@@ -43,7 +42,6 @@
           </tr>
         </tbody>
       </table>
-      <RouterLink to="/meals" class="more-link">View all meals →</RouterLink>
     </AppCard>
   </div>
 </template>
@@ -62,8 +60,9 @@ import EmptyState         from '@/components/EmptyState.vue'
 
 const authStore = useAuthStore()
 
-const workouts       = ref([])
-const allMeals       = ref([])
+const workouts = ref([])
+const allMeals = ref([])
+const stats    = ref([])
 
 const firstName = computed(() => {
   const name = authStore.displayName
@@ -72,43 +71,74 @@ const firstName = computed(() => {
 
 const todayStr = new Date().toISOString().split('T')[0]
 
-const recentWorkouts = computed(() => [...workouts.value].slice(-3).reverse())
+const recentWorkouts = computed(() =>
+  [...workouts.value].slice(0, 3)
+)
 
-const todayMeals     = computed(() => allMeals.value.filter(m => m.date === todayStr))
+const todayMeals = computed(() =>
+  allMeals.value.filter(m => m.date === todayStr)
+)
 
-const workoutCount   = computed(() => workouts.value.length)
-const mealCount      = computed(() => todayMeals.value.length)
+const workoutCount = computed(() => workouts.value.length)
+const mealCount    = computed(() => todayMeals.value.length)
 
-const calorieTotal   = computed(() =>
+const calorieTotal = computed(() =>
   todayMeals.value.reduce((s, m) => s + (+m.calories || 0), 0)
 )
 
-const latestWeight = computed(() => null)
+const latestWeight = computed(() =>
+  stats.value.length ? stats.value[0].weight : null
+)
 
 function mealTypeTag(type) {
-  return { Breakfast:'tag-yellow', Lunch:'tag-blue', Dinner:'tag-green', Snack:'tag-red' }[type] || 'tag-blue'
+  return {
+    Breakfast:'tag-yellow',
+    Lunch:'tag-blue',
+    Dinner:'tag-green',
+    Snack:'tag-red'
+  }[type] || 'tag-blue'
 }
 
 onMounted(async () => {
-  const uid = authStore.uid
-  if (!uid) return
+  const uid = authStore.user?.uid
 
-  const wq = query(
+  if (!uid) {
+    console.log("No UID found")
+    return
+  }
+
+  // WORKOUTS
+  const wSnap = await getDocs(query(
     collection(db, COL.workouts),
-    where('userId', '==', uid),
     orderBy('date', 'desc'),
-    limit(5)
-  )
-  const wSnap = await getDocs(wq)
-  workouts.value = wSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    limit(20)
+  ))
 
-  const mq = query(
-    collection(db, COL.meals),
-    where('userId', '==', uid),
-    where('date', '==', todayStr)
-  )
-  const mSnap = await getDocs(mq)
-  allMeals.value = mSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+  workouts.value = wSnap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(w => w.userId === uid)
+    .slice(0, 5)
+
+  // MEALS
+  const mSnap = await getDocs(query(
+    collection(db, COL.meals)
+  ))
+
+  allMeals.value = mSnap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(m => m.userId === uid)
+
+  // STATS
+  const sSnap = await getDocs(query(
+    collection(db, COL.stats),
+    orderBy('date', 'desc'),
+    limit(10)
+  ))
+
+  stats.value = sSnap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(s => s.userId === uid)
+    .slice(0, 1)
 })
 </script>
 

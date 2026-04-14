@@ -185,7 +185,8 @@ async function doRegister() {
     showAlert('Account created!', 'alert-success', 2000)
 
     // 3. Redirect
-    router.push({ name: 'Dashboard' })
+    await router.push({ name: 'Dashboard' })
+    window.location.reload()
 
   } catch (err) {
     console.error(err)

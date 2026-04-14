@@ -45,7 +45,7 @@
           </div>
           <span class="tag" :class="typeTag(p.type)">{{ p.type }}</span>
           <button
-            v-if="p.authorId === authStore.uid"
+            v-if="p.userId === authStore.uid"
             class="btn btn-danger btn-sm delete-post"
             @click="deletePost(p.id)"
           >✕</button>
@@ -118,14 +118,14 @@ async function submitPost() {
   busy.value = true
   try {
     const payload = {
-      authorId:   authStore.uid,
+      userId:     authStore.uid,
       authorName: authStore.displayName,
       body:       form.body.trim(),
       type:       form.type,
       likedBy:    [],
       createdAt:  serverTimestamp()
     }
-    const ref = await addDoc(collection(db, COL.community), payload)
+    const ref = await addDoc(collection(db, COL.posts), payload)
     posts.value.unshift({ id: ref.id, ...payload, createdAt: new Date() })
     form.body = ''
   } catch (err) {
@@ -139,7 +139,7 @@ async function loadPosts() {
   loading.value = true
   try {
     const q = query(
-      collection(db, COL.community),
+      collection(db, COL.posts),
       orderBy('createdAt', 'desc'),
       limit(50)
     )
@@ -154,14 +154,14 @@ async function loadPosts() {
 
 async function deletePost(id) {
   if (!confirm('Delete this post?')) return
-  await deleteDoc(doc(db, COL.community, id))
+  await deleteDoc(doc(db, COL.posts, id))
   posts.value = posts.value.filter(p => p.id !== id)
 }
 
 async function toggleLike(post) {
   const uid      = authStore.uid
   const hasLiked = post.likedBy?.includes(uid)
-  const ref      = doc(db, COL.community, post.id)
+  const ref      = doc(db, COL.posts, post.id)
   try {
     await updateDoc(ref, {
       likedBy: hasLiked ? arrayRemove(uid) : arrayUnion(uid)

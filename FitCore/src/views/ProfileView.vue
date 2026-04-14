@@ -112,7 +112,7 @@ const initials = computed(() => {
 // ── LOAD PROFILE ────────────────────────────────────────────
 // Reads the PUBLIC "users" document for this UID
 async function loadProfile() {
-  const snap = await getDoc(doc(db, COL.users, authStore.uid))
+  const snap = await getDoc(doc(db, COL.users, authStore.user?.uid))
   if (snap.exists()) {
     const data = snap.data()
     profileForm.displayName = data.displayName || authStore.displayName
@@ -126,13 +126,19 @@ async function loadProfile() {
 // ── LOAD ACTIVITY COUNTS ────────────────────────────────────
 // Reads counts from the three PRIVATE collections
 async function loadCounts() {
-  const uid = authStore.uid
+  let uid = authStore.user?.uid
+
+  // wait for auth to load
+  while (!uid) {
+    await new Promise(r => setTimeout(r, 50))
+    uid = authStore.user?.uid
+  }
 
   const [wSnap, mSnap, sSnap, pSnap] = await Promise.all([
     getDocs(query(collection(db, COL.workouts),  where('userId', '==', uid))),
     getDocs(query(collection(db, COL.meals),     where('userId', '==', uid))),
     getDocs(query(collection(db, COL.stats),     where('userId', '==', uid))),
-    getDocs(query(collection(db, COL.community), where('authorId', '==', uid)))
+    getDocs(query(collection(db, COL.posts),     where('userId', '==', uid)))
   ])
 
   counts.workouts = wSnap.size
@@ -153,7 +159,7 @@ async function saveProfile() {
     })
 
     // Update / create the PUBLIC Firestore user document
-    await setDoc(doc(db, COL.users, authStore.uid), {
+    await setDoc(doc(db, COL.users, authStore.user?.uid), {
       uid:         authStore.uid,
       displayName: profileForm.displayName.trim(),
       email:       authStore.user?.email || '',
