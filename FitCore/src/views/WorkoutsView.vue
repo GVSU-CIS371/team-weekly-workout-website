@@ -1,10 +1,7 @@
 <template>
-  <div>
-    <p></p>
-  </div>
   <div class="page">
     <PageHeader title="Workouts" subtitle="Build and log your training sessions." />
-
+    
     <!-- Summary pills -->
     <div v-if="workouts.length" class="pills-grid">
       <StatPill :value="workouts.length"  label="Sessions" />
@@ -109,7 +106,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   collection, query, where, orderBy,
   getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp
@@ -122,6 +120,7 @@ import AppCard          from '@/components/AppCard.vue'
 import EmptyState       from '@/components/EmptyState.vue'
 
 const authStore = useAuthStore()
+const route = useRoute()
 
 const workouts  = ref([])
 const loading   = ref(false)
@@ -136,16 +135,54 @@ const form = reactive({
 const totalExercises = computed(() =>
   workouts.value.reduce((a, w) => a + (w.exercises?.length || 0), 0)
 )
+
 const totalVolume = computed(() =>
   workouts.value.reduce((a, w) =>
     a + (w.exercises || []).reduce((b, e) =>
       b + ((+e.sets||0) * (+e.reps||0) * (+e.weight||0)), 0), 0)
 )
+
 const avgDuration = computed(() => {
   if (!workouts.value.length) return 0
   const total = workouts.value.reduce((a, w) => a + (+w.duration || 0), 0)
   return Math.round(total / workouts.value.length)
 })
+
+async function loadWorkouts() {
+  if (!authStore.uid) return
+
+  loading.value = true
+  try {
+    const q = query(
+      collection(db, COL.workouts),
+      where('userId', '==', authStore.uid),
+      orderBy('date', 'asc')
+    )
+    const snap = await getDocs(q)
+    workouts.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  } catch (err) {
+    console.error('loadWorkouts:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 🔥 FIX 1: load when user logs in
+watch(
+  () => authStore.uid,
+  (uid) => {
+    if (uid) loadWorkouts()
+  },
+  { immediate: true }
+)
+
+// 🔥 FIX 2: reload when page is accessed again
+watch(
+  () => route.fullPath,
+  () => {
+    if (authStore.uid) loadWorkouts()
+  }
+)
 
 async function saveWorkout() {
   if (!form.name) return
@@ -156,11 +193,11 @@ async function saveWorkout() {
     .map(e => ({ name:e.name, sets:+e.sets, reps:+e.reps, weight:+e.weight }))
 
   const payload = {
-    userId:    authStore.uid,
-    name:      form.name,
-    date:      form.date,
-    category:  form.category,
-    duration:  Number(form.duration),
+    userId: authStore.uid,
+    name: form.name,
+    date: form.date,
+    category: form.category,
+    duration: Number(form.duration),
     exercises,
     updatedAt: serverTimestamp()
   }
@@ -177,22 +214,11 @@ async function saveWorkout() {
       workouts.value.push({ id: ref.id, ...payload })
     }
     resetForm()
-  } catch (err) { console.error('saveWorkout:', err) }
-  finally { busy.value = false }
-}
-
-async function loadWorkouts() {
-  loading.value = true
-  try {
-    const q = query(
-      collection(db, COL.workouts),
-      where('userId', '==', authStore.uid),
-      orderBy('date', 'asc')
-    )
-    const snap = await getDocs(q)
-    workouts.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-  } catch (err) { console.error('loadWorkouts:', err) }
-  finally { loading.value = false }
+  } catch (err) {
+    console.error('saveWorkout:', err)
+  } finally {
+    busy.value = false
+  }
 }
 
 async function deleteWorkout(id) {
@@ -203,21 +229,36 @@ async function deleteWorkout(id) {
 
 function startEdit(w) {
   Object.assign(form, {
-    name: w.name, date: w.date, category: w.category, duration: w.duration,
+    name: w.name,
+    date: w.date,
+    category: w.category,
+    duration: w.duration,
     exercises: w.exercises.map(e => ({ ...e }))
   })
   editingId.value = w.id
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-function cancelEdit() { editingId.value = null; resetForm() }
+
+function cancelEdit() {
+  editingId.value = null
+  resetForm()
+}
+
 function resetForm() {
-  Object.assign(form, { name:'', date:today(), category:'Strength', duration:'' })
+  Object.assign(form, {
+    name: '',
+    date: today(),
+    category: 'Strength',
+    duration: ''
+  })
   form.exercises = [{ name:'', sets:'', reps:'', weight:'' }]
 }
-function today() { return new Date().toISOString().split('T')[0] }
 
-onMounted(loadWorkouts)
+function today() {
+  return new Date().toISOString().split('T')[0]
+}
 </script>
+
 
 <style scoped>
 .page { max-width: 960px; margin: 0 auto; padding: 3rem 2rem; }

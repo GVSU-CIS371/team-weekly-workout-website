@@ -27,13 +27,13 @@
     </nav>
 
     <!-- ── PAGE CONTENT with fade transition ─────────────── -->
-    <RouterView v-slot="{ Component }">
+    <RouterView v-slot="{ Component }" :key="$route.fullPath">
       <Transition name="fade" mode="out-in">
         <component :is="Component" :key="$route.path" />
       </Transition>
     </RouterView>
   </div>
-    <router-view :key="$route.fullPath" />
+    <router-view v-if="false":key="$route.fullPath" />
 </template>
 
 <script setup>
