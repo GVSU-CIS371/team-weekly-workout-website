@@ -1,0 +1,67 @@
+/* ============================================================
+   src/assets/main.css
+   Global reset, CSS design tokens, and base typography.
+   All colours / sizes live here as CSS variables — edit
+   this file to retheme the entire app at once.
+============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── DESIGN TOKENS ────────────────────────────────────────────
+   Change these variables to retheme the whole app instantly.
+─────────────────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg:        #0d0f14;   /* full-page background               */
+  --surface:   #161a22;   /* card / panel background            */
+  --surface2:  #1e2330;   /* input fields / hover background    */
+
+  /* Borders */
+  --border:    #2a3040;   /* subtle dividing lines              */
+
+  /* Accent colours */
+  --accent:    #e8ff47;   /* primary highlight  (yellow-green)  */
+  --accent2:   #47c8ff;   /* secondary highlight (sky blue)     */
+  --danger:    #ff5c5c;   /* destructive actions / errors       */
+  --success:   #4ade80;   /* success / positive feedback        */
+
+  /* Text */
+  --text:      #e8eaf0;   /* main readable text                 */
+  --muted:     #6b7280;   /* subdued labels and placeholders    */
+
+  /* Shape */
+  --radius:    10px;      /* default card / button corner size  */
+
+  /* Typography */
+  --font-display: 'Bebas Neue', sans-serif;  /* headings        */
+  --font-body:    'DM Sans', sans-serif;     /* body text       */
+  --font-mono:    'DM Mono', monospace;      /* dates / codes   */
+
+  /* Nav height — referenced in .login-wrap calc() */
+  --nav-h: 64px;
+}
+
+/* ── BASE ───────────────────────────────────────────────────── */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── SCROLLBAR (webkit) ─────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── PAGE TRANSITION ────────────────────────────────────────── */
+/* Vue Router applies .fade-enter-active / .fade-leave-active
+   when wrapping <RouterView> in a <Transition name="fade"> */
+.fade-enter-active,
+.fade-leave-active { transition: opacity .2s ease, transform .2s ease; }
+.fade-enter-from   { opacity: 0; transform: translateY(10px); }
+.fade-leave-to     { opacity: 0; transform: translateY(-6px); }
