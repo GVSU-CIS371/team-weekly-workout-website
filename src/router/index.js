@@ -1,9 +1,9 @@
 // ============================================================
-//  src/router/index.js
+// src/router/index.js
 // ============================================================
 
-import { createRouter, createWebHistory } from 'vue-router'
-import { getAuth, onAuthStateChanged }    from 'firebase/auth'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
 // Lazy-loaded views
 const LoginView     = () => import('@/views/LoginView.vue')
@@ -28,7 +28,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(), // ✅ FIXED
   routes,
   scrollBehavior: () => ({ top: 0 })
 })
@@ -44,7 +44,6 @@ onAuthStateChanged(auth, (user) => {
   authReady = true
 })
 
-// Helper to wait until Firebase finishes loading auth
 function waitForAuth() {
   return new Promise((resolve) => {
     const check = () => {
@@ -55,9 +54,9 @@ function waitForAuth() {
   })
 }
 
-// ── NAVIGATION GUARD (FIXED) ─────────────────────────────────
+// ── NAVIGATION GUARD ─────────────────────────────────────────
 router.beforeEach(async (to, _from, next) => {
-  await waitForAuth()  
+  await waitForAuth()
 
   const isSignedIn = !!currentUser
 
@@ -71,6 +70,5 @@ router.beforeEach(async (to, _from, next) => {
 
   next()
 })
-
 
 export default router
