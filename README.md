@@ -42,7 +42,7 @@ A full-stack Vue 3 + Firebase web application for tracking body stats, meals, wo
 ## Project Structure
 
 ```
-fitcore/
+weekly-workout-website/
 ├── index.html
 ├── package.json
 ├── vite.config.js
